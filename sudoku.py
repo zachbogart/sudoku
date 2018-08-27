@@ -92,27 +92,11 @@ puzzle_testing_too_many_nines = np.array([[0,3,2,0,9,1,0,5,4],
 class SudokuBoard:
     '''
         Defines the sudoku board object
-
-        Default
-            - init: defines board property
-        Getters
-            - display(): prints board to screen (prettified)
-            - get_board(): get access to board property
-            - get_box_values(cell_row, cell_col): access all values in current box
-            - get_row_values(row): access all values in current row
-            - get_col_values(col): access all values in current col
-            - get_cell_value(row, col): get desired cell's value
-            - is_board_finished(): returns bool for whether board is solved or not
-            - get_newest_number(): returns newest number added to board
-        Setters
-            - set_cell_value(row, col, val): set desired cell to val
-            - set_newest_number_values(row, col, val): set newest number to desired location and value
     '''
 
     # define board and newest addition info
     def __init__(self, board):
         self.board = board
-        self.newest_number = None
         self.newest_number_row = None
         self.newest_number_col = None
 
@@ -128,9 +112,8 @@ class SudokuBoard:
             for column in range(9):
                 if(self.board[row, column] != 0):
                     # color the newest number so it stands out
-                    if self.newest_number and self.newest_number_row == row and self.newest_number_col == column:
+                    if self.newest_number_row == row and self.newest_number_col == column:
                         print('\033[95m' + " " + str(self.board[row, column]) + '\033[0m', end='')
-                        self.newest_number = None
                     # normal color
                     else:
                         print(" " + str(self.board[row, column]), end='')
@@ -153,19 +136,19 @@ class SudokuBoard:
         '''
             returns all cell values in a given cell's square
         '''
-        BoxCoord_row = cell_row//3
-        BoxCoord_col = cell_col//3
+        box_coord_row = cell_row//3
+        box_coord_col = cell_col//3
 
-        BoxVals = []
-        for BoxPos_row in range(3):
-            for BoxPos_col in range(3):
-                Coord_row = 3*BoxCoord_row + BoxPos_row
-                Coord_col = 3*BoxCoord_col + BoxPos_col
-                Value = self.board[Coord_row][Coord_col]
-                if (Value != 0):
-                    BoxVals.append(Value)
+        box_vals = []
+        for box_pos_row in range(3):
+            for box_pos_col in range(3):
+                coord_row = 3*box_coord_row + box_pos_row
+                coord_col = 3*box_coord_col + box_pos_col
+                value = self.board[coord_row][coord_col]
+                if (value != 0):
+                    box_vals.append(value)
 
-        return BoxVals
+        return box_vals
 
     # get row values for desired cell
     def get_row_values(self, row):
@@ -192,14 +175,15 @@ class SudokuBoard:
     def get_cell_value(self, row, col):
         return self.board[row, col]
 
-    # check if board is finished
-    def is_board_finished(self):
+    # checks board is valid (no duplicates)
+    def is_board_valid(self):
         '''
-            Checks board is validly solved
+            Checks board is a valid starting board
+            - Subroutine for is_board_finished to check end state
         '''
         # check about duplicates
         def there_are_duplicates(nums):
-            return len(nums) != len(set(nums))
+            return set(nums) != set(range(1,10))
 
         cooordinates = range(9)
         boxes = [[1,1], [1,4], [1,7],
@@ -207,22 +191,13 @@ class SudokuBoard:
                  [7,1], [7,4], [7,7]]
         digits = range(1,10)
 
-        # dumb check for no blanks
-        for row in cooordinates:
-            for col in cooordinates:
-                if self.board[row, col].any() == 0:
-                    return False
-
         # check boxes
         for box in boxes:
             # get box values from board
             nums = self.get_box_values(box[0], box[1])
             # check about duplicates
             if there_are_duplicates(nums):
-                print("Error: Duplicate Detected in a Box (>_<)")
-                return False
-            # if box values do not contain all digits, say no
-            if set(nums) != set(digits):
+                print('\033[91m' + " " + "Error: Duplicate Detected in a Box (>_<)" + '\033[0m')
                 return False
 
         # check rows
@@ -231,10 +206,7 @@ class SudokuBoard:
             nums = self.get_row_values(row)
             # check about duplicates
             if there_are_duplicates(nums):
-                print("Error: Duplicate Detected in a Row (>_<)")
-                return False
-            # if row values do not contain all digits, say no
-            if set(nums) != set(digits):
+                print('\033[91m' + " " + "Error: Duplicate Detected in a Row (>_<)" + '\033[0m')
                 return False
 
         # check cols
@@ -243,41 +215,39 @@ class SudokuBoard:
             nums = self.get_col_values(col)
             # check about duplicates
             if there_are_duplicates(nums):
-                print("Error: Duplicate Detected in a Column (>_<)")
-                return False
-            # if col values do not contain all digits, say no
-            if set(nums) != set(digits):
+                print('\033[91m' + " " + "Error: Duplicate Detected in a Column (>_<)" + '\033[0m')
                 return False
 
         # got all the way with no faults, so done
         return True
 
-    # get newest addition to board
-    def get_newest_number(self):
-        return self.newest_number
+    # check if board is finished (no blanks AND no duplicates)
+    def is_board_finished(self):
+        '''
+            Checks board is validly solved (no blanks and no duplicates)
+        '''
+        cooordinates = range(9)
+
+        # dumb check for no blanks
+        for row in cooordinates:
+            for col in cooordinates:
+                if self.board[row, col].any() == 0:
+                    return False
+
+        return self.is_board_valid()
 
     # set value for selected cell
     def set_cell_value(self, row, col, val):
         self.board[row, col] = val
 
     # set value of most recently added number
-    def set_newest_number_values(self, row, col, val):
-        self.newest_number = val
+    def set_newest_number_values(self, row, col):
         self.newest_number_row = row
         self.newest_number_col = col
 
 class CellOptions:
     '''
         Defines the options for every cell on board
-
-        Default
-            - init: defines options property with input board's starting values
-        Getters
-            - display(): prints options to screen
-            - get_options_for_cell(row, col): returns options for desired cell
-            - get_num_options_for_cell(row, col): returns number of options for desired cell
-        Setters
-            - remove_option_for_cell(row, col, val): remove val from desired cell's options
     '''
 
     # define options
@@ -285,23 +255,19 @@ class CellOptions:
 
         '''
             create large array of possibilities for every cell
-            atom://teletype/portal/1fe8b177-e0ed-48b5-b2fd-933428e13572
         '''
 
         # fill value array
-        # options = [[[0 for x in range(9)]for y in range(9)]for z in range(9)]
-        options = np.zeros((9,9,9))
-        # options[:] = [1,2,3,4,5,6,7,8,9]
+        options = np.zeros((9,9,9), dtype=int)
+        options[:] = [1,2,3,4,5,6,7,8,9]
 
         for row in range(9):
             for col in range(9):
-                # if cell is undecided, included all values
-                if sudoku_board[row, col] == 0:
-                    for item in range(9):
-                        options[row, col, item] = item + 1
-                # if cell is decided, set it to that value
-                else:
-                    options[row, col] = [sudoku_board[row, col]]
+                # if cell is decided,remove all other values
+                current_val = sudoku_board[row,col]
+                if current_val != 0:
+                    options[row,col,:current_val-1] = 0
+                    options[row,col,current_val:] = 0
 
         self.options = options
 
@@ -313,17 +279,66 @@ class CellOptions:
     def get_options_for_cell(self, row, col):
         return self.options[row, col][self.options[row, col] != 0]
 
-    # returns options for desired box
-    def get_box_options(self, row, col):
-        return self.options[row, col][self.options[row, col] != 0]
-
     # returns options for desired row
-    def get_row_options(self, row, col):
+    def get_row_options_array(self, row):
         return self.options[row, :][self.options[row, :] != 0]
 
     # returns options for desired column
-    def get_col_options(self, row, col):
+    def get_col_options_array(self, col):
         return self.options[:,col][self.options[:,col] != 0]
+
+    # returns options for desired box
+    def get_box_options_array(self, cell_row, cell_col):
+        box_coord_row = cell_row//3
+        box_coord_col = cell_col//3
+
+        box_options = np.zeros(1, dtype=int)
+        for box_pos_row in range(3):
+            for box_pos_col in range(3):
+                coord_row = 3*box_coord_row + box_pos_row
+                coord_col = 3*box_coord_col + box_pos_col
+                newvals = self.get_options_for_cell(coord_row,coord_col)
+                box_options = np.append(box_options,newvals)
+
+        return box_options[box_options != 0]
+
+
+
+    def newfunc(choices, sudoku): # determine which cells contain the only possibility of a certain number inside a row, column, or box
+
+        # for row in range(9):
+        #     # count the number of options for each col in a row
+        #     option_counts_row = np.count_nonzero(np.tranpose(choices.get_row_options_array(row)), minlength=10)
+        #     option_counts_row = np.delete(option_counts, 0)
+        #     for col in range(9): # option_counts contains
+        #         if option_counts_row[col] == 1 and (sudoku(row,col) != col+1)
+        #             # SOLVED A NEW VALUE
+
+
+        for col in range(9):
+            # count the number of options for each row in a col
+            array_trans = np.transpose(choices.get_col_options_array(col))
+            option_counts_col = np.count_nonzero(array_trans)
+            # option_counts_col = np.delete(option_counts, 0)
+            for find_indx in range(9):
+                if option_counts_col[find_indx] == 1:
+                    # find position in array_trans that contains the lone value
+                    row = np.argmax(option_counts_col[find_indx])
+                    if sudoku(row,col) != find_indx+1:
+                        add_number_to_board(cell_row, cell_col, sudoku, choices)
+                        return 2, True, (cell_row, cell_col)
+
+
+
+
+        # for box_num in range(9):
+        #     row = (box_num%3)*3 # equal to [0,3,6,0,3,6,0,3,6]
+        #     col = (box_num//3)*2 # equal to [0,0,0,3,3,3,6,6,6]
+        #         np.count_nonzero(np.transpose(get_box_options_array(choices,row,col)), minlength=10)
+        #         option_counts_box = np.delete(option_counts, 0)
+        #         for iter in range(9):
+        #             if option_counts_box[]
+
 
     # returns number of options for desired cell
     def get_num_options_for_cell(self, row, col):
@@ -338,6 +353,19 @@ class CellOptions:
 ###############################################################################
 # ANALYSIS METHODS
 ###############################################################################
+
+# checks if one number remains in CellOptions
+def only_one_number_left(cell_row, cell_col, choices):
+    return choices.get_num_options_for_cell(cell_row, cell_col) == 1
+
+# updates the board object with addition + syntax highlighting for printing
+def add_number_to_board(cell_row, cell_col, sudoku, choices):
+        # add number to board
+        new_number = int(choices.get_options_for_cell(cell_row, cell_col))
+        sudoku.set_cell_value(cell_row, cell_col, new_number)
+
+        # make this value bold for printing
+        sudoku.set_newest_number_values(cell_row, cell_col)
 
 def immediate_neighbor_elimination(choices, sudoku):
     '''
@@ -364,99 +392,41 @@ def immediate_neighbor_elimination(choices, sudoku):
     # loop thru all cells
     for cell_row in range(9):
         for cell_col in range(9):
-            # get all neighbors by row/col/box
-            box = sudoku.get_box_values(cell_row,cell_col)
-            col = sudoku.get_col_values(cell_col)
-            row = sudoku.get_row_values(cell_row)
 
-            # combine neighbors to unique list
-            all_three = np.concatenate([row, col, box])
-            all_three = list(np.unique(all_three))
-            # remove current cell value from the group
-            all_three.remove(sudoku.get_cell_value(cell_row, cell_col))
+            # if the cell is not defined yet...
+            if sudoku.get_cell_value(cell_row, cell_col) == 0:
 
-            # remove possibilites
-            for rmv_num in all_three:
-                # if it's still an option, remove it
-                if rmv_num in choices.get_options_for_cell(cell_row, cell_col):
-                    choices.remove_option_for_cell(cell_row, cell_col, rmv_num)
-                    choices_removed += 1
-                    # if down to only one choice, add it to the board and return
-                    if choices.get_num_options_for_cell(cell_row, cell_col) == 1:
-                        new_number = choices.get_options_for_cell(cell_row, cell_col)[0]
-                        sudoku.set_cell_value(cell_row, cell_col, new_number)
+                # get all neighbors by row/col/box
+                box = sudoku.get_box_values(cell_row,cell_col)
+                col = sudoku.get_col_values(cell_col)
+                row = sudoku.get_row_values(cell_row)
+                # combine neighbors to unique list
+                all_three = np.array(row + col + box)
 
-                        # make this value bold for printing
-                        sudoku.set_newest_number_values(cell_row, cell_col, new_number)
+                all_three = list(np.unique(all_three))
 
-                        return 2, True, (cell_row, cell_col)
+                # remove current cell value from the group
+                all_three.remove(sudoku.get_cell_value(cell_row, cell_col))
+
+                # remove possibilites
+                for rmv_num in all_three:
+                    # if it's still an option, remove it
+                    if rmv_num in choices.get_options_for_cell(cell_row, cell_col):
+                        choices.remove_option_for_cell(cell_row, cell_col, rmv_num)
+                        choices_removed += 1
+                        # if down to only one choice, add it to the board and return
+                        if only_one_number_left(cell_row, cell_col, choices):
+                            add_number_to_board(cell_row, cell_col, sudoku, choices)
+                            return 2, True, (cell_row, cell_col)
 
     # at this point, nothing was added to board
 
     # if removed any choices, report progress was made
     if choices_removed > 0:
-        # reset newest number
-        sudoku.set_newest_number_values(None, None, None)
-
         return 1, True, None
     # otherwise, say no progress was made
     else:
-        # reset newest number
-        sudoku.set_newest_number_values(None, None, None)
-
         return 0, False, None
-
-
-###############################################################################
-# TODO
-###############################################################################
-
-def region_possibilities_func(cell_row, cell_col, cell_possibilities, region):
-    '''
-    return a list containing a list of all possible numbers in each cell
-    '''
-    if region == "row":
-        return cell_possibilities[cell_row].copy()
-
-    elif region == "col":
-        return [item[cell_col] for item in cell_possibilities]
-
-    elif region == "box":
-
-        BoxCoord_row = cell_row//3
-        BoxCoord_col = cell_col//3
-
-        region_possibilities = []
-        for BoxPos_row in range(3):
-            for BoxPos_col in range(3):
-                Coord_row = 3*BoxCoord_row + BoxPos_row
-                Coord_col = 3*BoxCoord_col + BoxPos_col
-                Value = cell_possibilities[Coord_row][Coord_col]
-                region_possibilities.append(Value)
-        return region_possibilities
-
-def neighbor_elimination_box(choices, sudoku):
-    '''
-        Update cell possibilities using neighboring cell values in
-        associated row/col/box
-
-
-    '''
-
-    # loop thru all cells
-    for cell_row in range(9):
-        for cell_col in range(9):
-            region_possibilities = sudoku.get_box_values(cell_row, cell_col)
-            region_possibilities.remove(sudoku.get_cell_value(cell_row, cell_col))
-
-
-
-
-#     region_possibilities = sudoku.
-
-    region_possibilities = region_possibilities_func(cell_row, cell_col, cell_possibilities, region)
-    region_possibilities.pop( 3*(cell_row%3) + cell_col%3 ) #remove possibilities of cell being checked
-
 
 ###############################################################################
 # USER STATUS-UPDATE
@@ -489,6 +459,28 @@ def respond_to_return_code(code, analysis_type, sudoku, location):
               "\n  " + str(row) + " Row, " + str(col) + " Column")
         sudoku.display()
 
+# puzzle_online_easy = np.array([[0,3,2,0,9,1,0,5,4],
+#                          [0,0,0,0,0,0,0,0,3],
+#                          [1,5,0,3,4,0,9,0,7],
+#                          [0,0,4,0,0,7,0,8,9],
+#                          [3,2,0,0,6,0,0,0,1],
+#                          [9,0,1,0,0,0,0,0,0],
+#                          [4,0,0,6,0,0,7,0,2],
+#                          [0,0,0,2,0,3,0,0,0],
+#                          [0,8,0,0,1,4,0,0,5]])
+#
+# foo = SudokuBoard(puzzle_online_easy)
+# bar = CellOptions(foo.get_board())
+#
+# # display board initially
+# foo.display()
+#
+# bar.display()
+# # bar.get_box_options(0,1)
+#
+# # bar.get_row_options(0,0)
+#
+# bar.get_row_options_array(3)
 
 ###############################################################################
 # MAIN
@@ -500,43 +492,48 @@ def main(board = puzzle_online_easy):
     sudoku = SudokuBoard(board)
     options = CellOptions(sudoku.get_board())
 
-    # display board initially
-    sudoku.display()
+    # only solve if board is valid
+    if sudoku.is_board_valid():
 
-    # define flags for progress and return values
-    made_progress = True
-    return_code = 1
+        # display board initially
+        sudoku.display()
 
-    # define method calls and formatting
-    method_names = {immediate_neighbor_elimination: "Simple Elimination"}
-    methods = method_names.keys()
+        # define flags for progress and return values
+        made_progress = True
+        return_code = 1
 
+        # define function calls and formatting names
+        method_names = {immediate_neighbor_elimination: "Simple Elimination"}
+        methods = method_names.keys()
 
-    # while making progress and unsolved, go thru analysis methods
-    while made_progress:
-        '''
-            - 0: no progress made
-            - 1: removed possibilities but no num placed
-            - 2: num placed on board/removed possibilities
-        '''
-        # loop thru methods, check if progress is made
-        for method in methods:
-            return_code, made_progress, location = method(options, sudoku)
-            respond_to_return_code(return_code, method_names[method], sudoku, location)
-            if return_code > 0:
-                break
+        # while making progress and unsolved, go thru analysis methods
+        while made_progress:
+            '''
+                - 0: no progress made
+                - 1: removed possibilities but no num placed
+                - 2: num placed on board/removed possibilities
+            '''
+            # loop thru methods, check if progress is made
+            for method in methods:
+                # run method
+                return_code, made_progress, location = method(options, sudoku)
+                # inform user about chanegs
+                respond_to_return_code(return_code, method_names[method], sudoku, location)
+                if return_code > 0:
+                    break
 
-    # at this point, no progress was made using all methods
+        # at this point, no progress was made using all methods
 
-    # if board is solved, say so
-    if sudoku.is_board_finished():
-        print("\nSOLVED ＼(^o^)／")
-    # otherwise, unable to solve this one
-    else:
-        print("\nCould not solve (>_<)")
+        # if board is solved, say so
+        if sudoku.is_board_finished():
+            print('\033[92m' + " " + "\nSOLVED ＼(^o^)／" + '\033[0m')
+        # otherwise, unable to solve this one
+        else:
+            print('\033[91m' + " " + "\nCould not solve (>_<)" + '\033[0m')
 
-    # display board
-    sudoku.display()
+        # display board
+        sudoku.newest_number_row, sudoku.newest_number_col = None, None #clear newest number (to avoid highlighting) for final print
+        sudoku.display()
 
 if __name__ == "__main__":
     main()
