@@ -285,20 +285,23 @@ class CellOptions:
 
         '''
             create large array of possibilities for every cell
+            atom://teletype/portal/1fe8b177-e0ed-48b5-b2fd-933428e13572
         '''
-        # fill value array
-        options = [[[0 for x in range(9)]for y in range(9)]for z in range(9)]
 
+        # fill value array
+        # options = [[[0 for x in range(9)]for y in range(9)]for z in range(9)]
+        options = np.zeros((9,9,9))
+        # options[:] = [1,2,3,4,5,6,7,8,9]
 
         for row in range(9):
             for col in range(9):
                 # if cell is undecided, included all values
                 if sudoku_board[row, col] == 0:
                     for item in range(9):
-                        options[row][col][item] = item + 1
+                        options[row, col, item] = item + 1
                 # if cell is decided, set it to that value
                 else:
-                    options[row][col] = [sudoku_board[row, col]]
+                    options[row, col] = [sudoku_board[row, col]]
 
         self.options = options
 
@@ -308,15 +311,28 @@ class CellOptions:
 
     # returns options for desired cell
     def get_options_for_cell(self, row, col):
-        return self.options[row][col]
+        return self.options[row, col][self.options[row, col] != 0]
+
+    # returns options for desired box
+    def get_box_options(self, row, col):
+        return self.options[row, col][self.options[row, col] != 0]
+
+    # returns options for desired row
+    def get_row_options(self, row, col):
+        return self.options[row, :][self.options[row, :] != 0]
+
+    # returns options for desired column
+    def get_col_options(self, row, col):
+        return self.options[:,col][self.options[:,col] != 0]
 
     # returns number of options for desired cell
     def get_num_options_for_cell(self, row, col):
-        return len(self.options[row][col])
+        # return len(self.options[row, col])
+        return np.count_nonzero(self.options[row, col])
 
     # remove option from desired cell
     def remove_option_for_cell(self, row, col, val):
-        self.options[row][col].remove(val)
+        self.options[row, col, val-1] = 0
 
 
 ###############################################################################
@@ -434,6 +450,8 @@ def neighbor_elimination_box(choices, sudoku):
             region_possibilities.remove(sudoku.get_cell_value(cell_row, cell_col))
 
 
+
+
 #     region_possibilities = sudoku.
 
     region_possibilities = region_possibilities_func(cell_row, cell_col, cell_possibilities, region)
@@ -489,44 +507,36 @@ def main(board = puzzle_online_easy):
     made_progress = True
     return_code = 1
 
+    # define method calls and formatting
+    method_names = {immediate_neighbor_elimination: "Simple Elimination"}
+    methods = method_names.keys()
+
+
     # while making progress and unsolved, go thru analysis methods
-    while made_progress and not sudoku.is_board_finished():
+    while made_progress:
         '''
             - 0: no progress made
             - 1: removed possibilities but no num placed
             - 2: num placed on board/removed possibilities
         '''
-        # inner while loop to ensure simplest methods checked first
-        while made_progress:
-
-            # simple elimination
-            return_code, made_progress, location = immediate_neighbor_elimination(options, sudoku)
-            respond_to_return_code(return_code, "Simple Elimination", sudoku, location)
-
-#             # another method
-#             return_code, made_progress, location = immediate_neighbor_elimination(options, sudoku)
-#             respond_to_return_code(return_code, "Simple Elimination", sudoku, location)
-#             if return_code > 0:
-#                 break
-
-
-        '''
-        something like
-        if return_code > 0:
-            - break from the loop
-        '''
+        # loop thru methods, check if progress is made
+        for method in methods:
+            return_code, made_progress, location = method(options, sudoku)
+            respond_to_return_code(return_code, method_names[method], sudoku, location)
+            if return_code > 0:
+                break
 
     # at this point, no progress was made using all methods
 
     # if board is solved, say so
     if sudoku.is_board_finished():
         print("\nSOLVED ＼(^o^)／")
-        sudoku.display()
     # otherwise, unable to solve this one
     else:
         print("\nCould not solve (>_<)")
-        sudoku.display()
 
+    # display board
+    sudoku.display()
 
 if __name__ == "__main__":
     main()
