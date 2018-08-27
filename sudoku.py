@@ -183,7 +183,7 @@ class SudokuBoard:
         '''
         # check about duplicates
         def there_are_duplicates(nums):
-            return set(nums) != set(range(1,10))
+            return len(set(nums)) != len(nums)
 
         cooordinates = range(9)
         boxes = [[1,1], [1,4], [1,7],
@@ -202,8 +202,9 @@ class SudokuBoard:
 
         # check rows
         for row in cooordinates:
-            # get row values from board
+            # get row values from board, removing blanks
             nums = self.get_row_values(row)
+            nums[:] = [x for x in nums if x != 0]
             # check about duplicates
             if there_are_duplicates(nums):
                 print('\033[91m' + " " + "Error: Duplicate Detected in a Row (>_<)" + '\033[0m')
@@ -213,6 +214,7 @@ class SudokuBoard:
         for col in cooordinates:
             # get col values from board
             nums = self.get_col_values(col)
+            nums[:] = [x for x in nums if x != 0]
             # check about duplicates
             if there_are_duplicates(nums):
                 print('\033[91m' + " " + "Error: Duplicate Detected in a Column (>_<)" + '\033[0m')
