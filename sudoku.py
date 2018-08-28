@@ -228,13 +228,9 @@ class SudokuBoard:
         '''
             Checks board is validly solved (no blanks and no duplicates)
         '''
-        cooordinates = range(9)
-
         # dumb check for no blanks
-        for row in cooordinates:
-            for col in cooordinates:
-                if self.board[row, col].any() == 0:
-                    return False
+        if 0 in self.board:
+            return False
 
         return self.is_board_valid()
 
@@ -457,9 +453,16 @@ def respond_to_return_code(code, analysis_type, sudoku, location):
         print(analysis_type + ": Removed Possibilities ('_')")
     elif code == 2:
         row, col = write_cell_location_in_words(location)
-        print(analysis_type + ": Added a number (^_^)" +
-              "\n  " + str(row) + " Row, " + str(col) + " Column")
+        print(analysis_type + ": Added a number (^_^)" + "\n  " + str(row) + " Row, " + str(col) + " Column")
         sudoku.display()
+
+        if sudoku.is_board_finished():
+            print('\033[92m' + " " + "\nSOLVED ＼(^o^)／" + '\033[0m')
+            # display board
+            sudoku.newest_number_row, sudoku.newest_number_col = None, None #clear newest number (to avoid highlighting) for final print
+            sudoku.display()
+            return True
+
 
 # puzzle_online_easy = np.array([[0,3,2,0,9,1,0,5,4],
 #                          [0,0,0,0,0,0,0,0,3],
@@ -519,23 +522,20 @@ def main(board = puzzle_online_easy):
             for method in methods:
                 # run method
                 return_code, made_progress, location = method(options, sudoku)
-                # inform user about chanegs
-                respond_to_return_code(return_code, method_names[method], sudoku, location)
+                # inform user about changes
+                if respond_to_return_code(return_code, method_names[method], sudoku, location):
+                    return # game finished
+                # break if progress was made
                 if return_code > 0:
                     break
 
         # at this point, no progress was made using all methods
-
-        # if board is solved, say so
-        if sudoku.is_board_finished():
-            print('\033[92m' + " " + "\nSOLVED ＼(^o^)／" + '\033[0m')
-        # otherwise, unable to solve this one
-        else:
-            print('\033[91m' + " " + "\nCould not solve (>_<)" + '\033[0m')
-
+        # unable to solve this one
+        print('\033[91m' + " " + "\nCould not solve (>_<)" + '\033[0m')
         # display board
         sudoku.newest_number_row, sudoku.newest_number_col = None, None #clear newest number (to avoid highlighting) for final print
         sudoku.display()
+
 
 if __name__ == "__main__":
     main()
