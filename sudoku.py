@@ -544,7 +544,7 @@ def respond_to_progress_made(code, analysis_type, sudoku, location):
 ### GLOBALS ###
 human_memory = 2 # corresponds to the number of values a human can retain when solving the sudoku
 
-def main(board = puzzle_testing_too_many_nines):
+def main(board = puzzle_comp_2018):
 
     # setup board and choices objects
     sudoku = SudokuBoard(board)
