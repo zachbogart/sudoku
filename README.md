@@ -5,4 +5,4 @@ We wanted to make a program that wouldn't just solve a sudoku puzzle, but do so 
 
 Authors:
 - [Zach Bogart](https://github.com/zachbogart)
-- Max Torke
+- [Max Torke](https://github.com/mztorke)
