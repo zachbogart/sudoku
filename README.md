@@ -6,7 +6,7 @@ We wanted to make a program that wouldn't just solve a sudoku puzzle, but do so 
 - You can add your own board and see how the program decides which number to add
 - Pretty syntax highlighting lets you see the new number additions easily
 
-Currently, the solver cannot solve all sudokus but it can still solve a bunch; most puzzles in the newspaper can be solved as well as some competition-level ones. We didn't just want to make a suddoku solver since that has been done and there are better ways of doing it. Instead, we tried to write human behavior as code. We hope to make it smarter in the future.
+Currently, the solver cannot solve all sudokus but it can still solve a bunch; most puzzles in the newspaper can be solved as well as some competition-level ones. We didn't just want to make a sudoku solver since that has been done and there are better ways of doing it. Instead, we tried to write human behavior as code. We hope to make it smarter in the future.
 
 We hope you enjoy and are able to use this to test the difficulty of your sudoku board designs.
 
